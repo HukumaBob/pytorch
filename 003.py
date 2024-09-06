@@ -14,18 +14,14 @@ trans = tv.transforms.Compose(
 
 ds_mnist = tv.datasets.MNIST('./datasets', download=True, transform=trans)
 
-ds_mnist[100][0].numpy()[0].shape
-plt.imshow(ds_mnist[100][0].numpy()[0])
+# ds_mnist[100][0].numpy()[0].shape
+# plt.imshow(ds_mnist[100][0].numpy()[0])
 
 batch_size = 16
 dataloader = torch.utils.data.DataLoader(
     ds_mnist, batch_size=batch_size,
     shuffle=True, num_workers=1, drop_last=True
     )
-
-# for img, label in dataloader:
-#   print(img.shape)
-#   print(label.shape)
 
 class Neural_number(nn.Module):
   def __init__(self):
@@ -56,8 +52,6 @@ optimizer = torch.optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
 
 def accuracy(pred, label):
    answer = F.softmax(pred.detach()).numpy().argmax(1) == label.numpy().argmax(1)
-#    print(answer)
-#    print(answer.sum())
    return answer.mean()
 
 epochs = 5

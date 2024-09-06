@@ -1,4 +1,5 @@
 import matplotlib
+from tqdm import tqdm
 matplotlib.use('TkAgg')  # Устанавливаем интерактивный бэкенд
 import matplotlib.pyplot as plt
 import torch.nn as nn
@@ -116,7 +117,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
-    for images, labels in train_loader:
+    for images, labels in tqdm(train_loader):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(images)
@@ -156,6 +157,7 @@ for epoch in range(num_epochs):
 
     # Точность на тестовом наборе
     accuracy = 100 * correct / total
+    accuracies.append(accuracy)  # Добавляем точность в список accuracies    
 
     # Сохраняем модель только если точность улучшилась
     if accuracy > best_accuracy:
