@@ -1,3 +1,7 @@
 .venv
 datasets
 best_model.pth
+dataset/single_prediction
+dataset/test_set
+dataset/training_set
+data/FashionMNIST

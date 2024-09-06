@@ -1,8 +1,11 @@
+import cv2
 import matplotlib
 from tqdm import tqdm
 matplotlib.use('TkAgg')  # Устанавливаем интерактивный бэкенд
 import matplotlib.pyplot as plt
 import torch.nn as nn
+import torch.nn.functional as F
+
 import torch.optim as optim
 import struct
 import numpy as np
@@ -197,3 +200,44 @@ plt.legend()
 plt.title('Test Accuracy')
 
 plt.show()
+
+# Загрузка сохранённой модели
+model.load_state_dict(torch.load('best_model.pth'))
+model.eval()  # Переключаем модель в режим оценки
+
+# Чтение и предобработка изображения
+def test_img(pass_file):
+    # Шаг 1: Загрузка изображения
+    img = cv2.imread(pass_file, cv2.IMREAD_GRAYSCALE)  # Градации серого
+
+    # Шаг 2: Преобразование в формат [0, 1]
+    img = img.astype(np.float32) / 255.0  # Нормализация в диапазон [0, 1]
+
+    # Шаг 3: Применение нормализации с mean=0.1307 и std=0.3081
+    mean = 0.1307
+    std = 0.3081
+    img = (img - mean) / std  # Применение нормализации
+
+    # Шаг 4: Преобразование в тензор для подачи в модель
+    img = np.expand_dims(img, axis=0)  # Добавляем ось канала (1, 28, 28)
+    img = np.expand_dims(img, axis=0)  # Добавляем ось батча (1, 1, 28, 28)
+    t_img = torch.from_numpy(img)
+
+    # Пример подачи изображения в модель
+    t_img = t_img.to(device)
+    output = model(t_img)
+
+    # Вывод предсказания
+    _, predicted = torch.max(output, 1)
+    print(f'Predicted digit: {predicted.item()}')
+
+test_img('test1.png')
+test_img('test2.png')
+test_img('test3.png')
+test_img('test4.png')
+test_img('test5.png')
+test_img('test6.png')
+test_img('test7.png')
+test_img('test8.png')
+test_img('test9.png')
+test_img('test0.png')

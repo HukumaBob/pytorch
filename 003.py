@@ -14,10 +14,7 @@ trans = tv.transforms.Compose(
 
 ds_mnist = tv.datasets.MNIST('./datasets', download=True, transform=trans)
 
-# ds_mnist[100][0].numpy()[0].shape
-# plt.imshow(ds_mnist[100][0].numpy()[0])
-
-batch_size = 16
+batch_size = 32
 dataloader = torch.utils.data.DataLoader(
     ds_mnist, batch_size=batch_size,
     shuffle=True, num_workers=1, drop_last=True
