@@ -205,23 +205,86 @@ plt.show()
 model.load_state_dict(torch.load('best_model.pth'))
 model.eval()  # Переключаем модель в режим оценки
 
+def show_comparison(test_img, mnist_img, test_title, mnist_title):
+    """Функция для отображения двух изображений рядом"""
+    plt.figure(figsize=(8, 4))
+    
+    # Отображаем тестируемое изображение
+    plt.subplot(1, 2, 1)
+    plt.imshow(test_img, cmap='gray')
+    plt.title(test_title)
+
+    # Отображаем изображение из MNIST
+    plt.subplot(1, 2, 2)
+    plt.imshow(mnist_img, cmap='gray')
+    plt.title(mnist_title)
+
+    plt.show()
+
+# Функция для поиска изображения MNIST по метке
+def find_mnist_image_by_label(label, images, labels):
+    """Находит первое изображение с нужной меткой (label)"""
+    for idx, lbl in enumerate(labels):
+        if lbl == label:
+            return images[idx]
+    return None  # Если изображение с нужной меткой не найдено
+
+# Функция для отображения сравнения
+def show_comparison(test_img, mnist_img, test_title, mnist_title):
+    """Функция для отображения двух изображений рядом"""
+    plt.figure(figsize=(8, 4))
+    
+    # Отображаем тестируемое изображение
+    plt.subplot(1, 2, 1)
+    plt.imshow(test_img, cmap='gray')
+    plt.title(test_title)
+
+    # Отображаем изображение из MNIST
+    plt.subplot(1, 2, 2)
+    plt.imshow(mnist_img, cmap='gray')
+    plt.title(mnist_title)
+
+    plt.show()
+
 # Чтение и предобработка изображения
-def test_img(pass_file):
+def test_img(pass_file, mnist_images, mnist_labels):
     # Шаг 1: Загрузка изображения
     img = cv2.imread(pass_file, cv2.IMREAD_GRAYSCALE)  # Градации серого
 
-    # Шаг 2: Преобразование в формат [0, 1]
+    # Проверяем размер изображения, если не 28x28 - масштабируем
+    if img.shape != (28, 28):
+        img = cv2.resize(img, (28, 28))
+
+    # Определяем цифру из имени файла (например, '0.png' -> 0)
+    label = int(pass_file[0])
+
+    # Шаг 2: Изображение из MNIST для сравнения
+    mnist_img = find_mnist_image_by_label(label, mnist_images, mnist_labels)
+    
+    if mnist_img is None:
+        print(f"No MNIST image found for label {label}")
+        return
+    
+    mnist_img = mnist_img.astype(np.float32)
+
+    # Показываем изображения для сравнения
+    show_comparison(img, mnist_img, f"Testing image: {pass_file}", f"MNIST image (label {label})")
+
+    # Шаг 3: Преобразование в формат [0, 1]
     img = img.astype(np.float32) / 255.0  # Нормализация в диапазон [0, 1]
 
-    # Шаг 3: Применение нормализации с mean=0.1307 и std=0.3081
+    # Шаг 4: Применение нормализации с mean=0.1307 и std=0.3081
     mean = 0.1307
     std = 0.3081
     img = (img - mean) / std  # Применение нормализации
 
-    # Шаг 4: Преобразование в тензор для подачи в модель
+    # Шаг 5: Преобразование в тензор для подачи в модель
     img = np.expand_dims(img, axis=0)  # Добавляем ось канала (1, 28, 28)
     img = np.expand_dims(img, axis=0)  # Добавляем ось батча (1, 1, 28, 28)
-    t_img = torch.from_numpy(img)
+    t_img = torch.from_numpy(img).float()
+
+    # Преобразование формы тензора для подачи в модель (batch_size, 784)
+    t_img = t_img.view(-1, 28 * 28)  # Превращаем (1, 1, 28, 28) в (1, 784)
 
     # Пример подачи изображения в модель
     t_img = t_img.to(device)
@@ -229,15 +292,8 @@ def test_img(pass_file):
 
     # Вывод предсказания
     _, predicted = torch.max(output, 1)
-    print(f'Predicted digit: {predicted.item()}')
+    print(f'Predicted digit for file {pass_file}: {predicted.item()}')
 
-test_img('test1.png')
-test_img('test2.png')
-test_img('test3.png')
-test_img('test4.png')
-test_img('test5.png')
-test_img('test6.png')
-test_img('test7.png')
-test_img('test8.png')
-test_img('test9.png')
-test_img('test0.png')
+# Тестируем изображения с диска и сравниваем их с соответствующими MNIST изображениями
+for i in range(10):
+    test_img(f'{i}.png', train_images, train_labels)
