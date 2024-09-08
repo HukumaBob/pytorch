@@ -6,6 +6,8 @@ from torchvision import datasets, models, transforms
 from torch.utils.data import DataLoader
 from pathlib import Path
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 
 # Шаг 2: Подготовка данных
@@ -103,6 +105,9 @@ optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 def train_model(model, dataloaders, criterion, optimizer, num_epochs=10):
     model.train()  # Устанавливаем модель в режим обучения
 
+    train_losses = []  # Для сохранения потерь на каждой эпохе
+    train_accuracies = []  # Для сохранения точности на каждой эпохе    
+
     for epoch in range(num_epochs):
         running_loss = 0.0
         correct = 0
@@ -130,7 +135,12 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=10):
         epoch_loss = running_loss / total
         accuracy = correct / total
 
+        train_losses.append(epoch_loss)  # Сохраняем потери
+        train_accuracies.append(accuracy)  # Сохраняем точность    
+
         print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss:.4f}, Accuracy: {accuracy:.4f}')
+    
+    return train_losses, train_accuracies
 
 # Шаг 6: Тестирование модели
 # После обучения проверим модель на тестовых данных.
@@ -150,8 +160,34 @@ def evaluate_model(model, dataloaders):
 
     accuracy = correct / total
     print(f'Test Accuracy: {accuracy:.4f}')
+    return accuracy
 
 # Шаг 7: Запуск обучения и тестирования
 num_epochs = 10
-train_model(model, dataloaders, criterion, optimizer, num_epochs)
-evaluate_model(model, dataloaders)
+train_losses, train_accuracies = train_model(model, dataloaders, criterion, optimizer, num_epochs)
+test_accuracy = evaluate_model(model, dataloaders)
+
+# Построение графиков
+epochs = range(1, num_epochs + 1)
+
+# График потерь
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(epochs, train_losses, 'bo-', label='Training loss')
+plt.title('Training Loss per Epoch')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+
+# График точности
+plt.subplot(1, 2, 2)
+plt.plot(epochs, train_accuracies, 'ro-', label='Training accuracy')
+plt.axhline(y=test_accuracy, color='g', linestyle='--', label=f'Test Accuracy: {test_accuracy:.4f}')
+plt.title('Training Accuracy per Epoch')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
