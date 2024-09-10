@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, models, transforms
+from torchvision.models import ResNet50_Weights
 from torch.utils.data import DataLoader
 from pathlib import Path
 from tqdm import tqdm
@@ -60,38 +61,16 @@ num_classes = len(image_datasets['train'].classes)
 # # и заменим последний полносвязный слой для классификации кошек и собак.
 # # Используем предобученную модель ResNet18
 
-# model = models.resnet18(pretrained=True)
+model = models.resnet50(weights=ResNet50_Weights.DEFAULT)
 
-# # # Заменим последний полносвязный слой
+# # Замораживаем все слои - стала работать хуже
+# for param in model.parameters():
+#     param.requires_grad = False
 
-# num_ftrs = model.fc.in_features
-# model.fc = nn.Linear(num_ftrs, num_classes)  # num_classes = 2 (cats, dogs)
+# Заменим последний полносвязный слой
+num_ftrs = model.fc.in_features
+model.fc = nn.Linear(num_ftrs, num_classes)  # num_classes = 2 (cats, dogs)
 
-# Или обучим свою сеть сами:
-# Создание собственной CNN-модели
-class SimpleCNN(nn.Module):
-    def __init__(self, num_classes=2):
-        super(SimpleCNN, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)  # Сверточный слой 1
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)  # Сверточный слой 2
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)  # Сверточный слой 3
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)  # Пуллинг (макспулинг)
-        self.fc1 = nn.Linear(128 * (img_size // 8) * (img_size // 8), 512)  # Полносвязный слой
-        self.fc2 = nn.Linear(512, num_classes)  # Выходной слой (2 класса: кошки и собаки)
-        self.relu = nn.ReLU()  # Активация ReLU
-        self.dropout = nn.Dropout(0.5)  # Dropout для предотвращения переобучения
-
-    def forward(self, x):
-        x = self.pool(self.relu(self.conv1(x)))  # Сверточный слой 1 -> ReLU -> Пуллинг
-        x = self.pool(self.relu(self.conv2(x)))  # Сверточный слой 2 -> ReLU -> Пуллинг
-        x = self.pool(self.relu(self.conv3(x)))  # Сверточный слой 3 -> ReLU -> Пуллинг
-        x = x.view(-1, 128 * (img_size // 8) * (img_size // 8))  # Выровнять (flatten)
-        x = self.dropout(self.relu(self.fc1(x)))  # Полносвязный слой 1 -> ReLU -> Dropout
-        x = self.fc2(x)  # Выходной слой
-        return x
-
-# Создаем модель
-model = SimpleCNN(num_classes=num_classes)
 # Использование GPU, если доступно
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
@@ -100,9 +79,9 @@ model = model.to(device)
 # Шаг 4: Определение функции потерь и оптимизатора
 # Определение функции потерь и оптимизатора
 criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) 
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9) 
 # Можно поиграть с тонкими настройками
-optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.01, betas=(0.9, 0.999))
+# optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=0.01, betas=(0.9, 0.999))
 
 # StepLR уменьшает lr каждые 10 эпох в 10 раз
 scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)

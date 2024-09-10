@@ -6,3 +6,4 @@ dataset/test_set
 dataset/training_set
 data/FashionMNIST
 dataset/train_set
+average_temperature_dataset
