@@ -8,6 +8,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+import torch.nn.functional as F
 
 # Download training data from open datasets.
 # Используются встроенные датасеты FashionMNIST (изображения одежды).
@@ -30,7 +31,7 @@ test_data = datasets.FashionMNIST(
 
 # Размер батча (mini-batch) устанавливается равным 64.
 # DataLoader используется для итеративной загрузки данных по мини-пакетам.
-batch_size = 64
+batch_size = 32
 
 # Create data loaders.
 train_dataloader = DataLoader(training_data, batch_size=batch_size)

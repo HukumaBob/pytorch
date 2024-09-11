@@ -6,6 +6,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
+
 
 # Загрузка данных
 df = pd.read_csv('average_temperature_dataset/average-temperature-1900-2023.csv')
@@ -134,3 +136,13 @@ plt.plot(scaler.inverse_transform(np.array(predictions).reshape(-1, 1)), label="
 plt.legend()
 plt.title("Actual vs Predicted Global Temperature")
 plt.show()
+
+# Логгирование данных для TensorBoard
+writer = SummaryWriter()
+
+# Примерные данные для входа (один batch)
+sample_input = torch.randn(1, seq_length, 1).to(device)
+
+# Записываем модель в TensorBoard
+writer.add_graph(model, sample_input)
+writer.close()
